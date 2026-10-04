@@ -6,7 +6,9 @@ class Settings(BaseSettings):
     app_name: str = "Ecommerce API"
     debug: bool = False
     app_env: str = "development"
-
+    app_key: str = ""
+    jwt_algorithm: str = ""
+    access_token_expire_minutes: int = 30
     db_connection: str = "mysql+pymysql"
     db_host: str = ""
     db_port: int = 3306
