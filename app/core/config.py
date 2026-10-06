@@ -9,7 +9,8 @@ class Settings(BaseSettings):
     app_key: str = ""
     jwt_algorithm: str = ""
     access_token_expire_minutes: int = 30
-    db_connection: str = "mysql+pymysql"
+    default_locale: str = "en"
+    db_connection: str = "mysql+aiomysql"
     db_host: str = ""
     db_port: int = 3306
     db_database: str = ""

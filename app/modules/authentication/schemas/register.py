@@ -10,3 +10,4 @@ class RegisterRequest(BaseModel):
     username: Username
     email: Annotated[EmailStr, Field(min_length=1, max_length=255)]
     password: Password
+    language: Annotated[str, Field(min_length=2, max_length=10)]
