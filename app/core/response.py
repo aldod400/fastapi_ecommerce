@@ -1,7 +1,6 @@
 from math import ceil
-from typing import Any
 
-from pydantic import BaseModel, SerializerFunctionWrapHandler, model_serializer
+from pydantic import BaseModel
 
 
 class PaginationMeta(BaseModel):
@@ -29,11 +28,7 @@ class ApiResponse[T](BaseModel):
     status_code: int
     message: str = "Success"
     data: T | None = None
-    meta: PaginationMeta | None = None
 
-    @model_serializer(mode="wrap")
-    def _omit_empty_meta(self, handler: SerializerFunctionWrapHandler):
-        serialized: dict[str, Any] = handler(self)
-        if self.meta is None:
-            serialized.pop("meta", None)
-        return serialized
+
+class PaginatedResponse[T](ApiResponse[list[T]]):
+    meta: PaginationMeta

@@ -1,3 +1,7 @@
+from dataclasses import dataclass
+
+from app.core.config import settings
+from app.core.security import create_access_token, hash_password
 from app.modules.authentication.schemas.register import RegisterRequest
 from app.modules.users.model import User
 from app.modules.users.repository import UserRepository
@@ -6,12 +10,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.i18n.translator import t
 
 
+@dataclass(frozen=True)
+class AuthenticatedUser:
+    user: User
+    access_token: str
+    expires_in: int
+
+
 class AuthenticationService:
     def __init__(self, db: AsyncSession, user_repo: UserRepository):
         self.db = db
         self.user_repo = user_repo
 
-    async def register(self, register_request: RegisterRequest):
+    async def register(self, register_request: RegisterRequest) -> AuthenticatedUser:
         username_exists = await self.user_repo.get_user_by_username(
             register_request.username
         )
@@ -28,7 +39,7 @@ class AuthenticationService:
                 name=register_request.name,
                 username=register_request.username,
                 email=register_request.email,
-                password=register_request.password,
+                password=hash_password(register_request.password),
                 is_active=True,
                 language=register_request.language,
             )
@@ -38,4 +49,11 @@ class AuthenticationService:
 
         await self.db.refresh(user)
 
-        return user
+        return self._authenticate(user)
+
+    def _authenticate(self, user: User) -> AuthenticatedUser:
+        return AuthenticatedUser(
+            user=user,
+            access_token=create_access_token(user.id),
+            expires_in=settings.access_token_expire_minutes * 60,
+        )

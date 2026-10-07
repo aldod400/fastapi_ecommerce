@@ -2,6 +2,8 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import jwt
+import uuid
+
 from pwdlib import PasswordHash
 
 from app.core.config import settings
@@ -17,12 +19,14 @@ def verify_password(password: str, hashed_password: str) -> bool:
     return password_hash.verify(password, hashed_password)
 
 
-def create_access_token(subject: str, expires_delta: timedelta | None = None) -> str:
+def create_access_token(
+    subject: uuid.UUID, expires_delta: timedelta | None = None
+) -> str:
     now = datetime.now(UTC)
     expires_at = now + (
         expires_delta or timedelta(minutes=settings.access_token_expire_minutes)
     )
-    payload: dict[str, Any] = {"sub": subject, "iat": now, "exp": expires_at}
+    payload: dict[str, Any] = {"sub": str(subject), "iat": now, "exp": expires_at}
     return jwt.encode(payload, settings.app_key, algorithm=settings.jwt_algorithm)
 
 

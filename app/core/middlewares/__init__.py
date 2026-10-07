@@ -1,12 +1,17 @@
 from fastapi import FastAPI
 
+from app.core.database.connection import SessionLocal
 from app.core.i18n import translator
 from app.core.i18n.resolvers import HeaderLocaleResolver, UserLocaleResolver
 from app.core.middlewares.locale import register_locale_middleware
-from app.modules.users.locale import get_user_language
+from app.modules.users.locale import UserLanguageLookup
+from app.modules.users.repository import UserRepository
 
 
 def register_middlewares(app: FastAPI) -> None:
+    """Register all middlewares for the FastAPI application."""
+    get_user_language = UserLanguageLookup(SessionLocal, UserRepository)
+
     register_locale_middleware(
         app,
         # Checked in order; the first supported language wins.
