@@ -29,13 +29,27 @@ async def register_user(
     )
 
 
+@router.post("/login", response_model=ApiResponse[AuthenticationResponse])
+async def login_user(
+    email: str,
+    password: str,
+    authentication_service: AuthenticationService = Depends(get_authentication_service),
+) -> ApiResponse[AuthenticationResponse]:
+    """Authenticate a user and return an access token."""
+    authenticated = await authentication_service.login(email, password)
+
+    return ApiResponse(
+        status_code=200,
+        message=t("auth.login_successful"),
+        data=to_authentication_response(authenticated),
+    )
+
+
 @router.get("/me", response_model=ApiResponse[UserResponse])
-async def get_current_user(
-    current_user: UserResponse = Depends(get_authentication_service),
-) -> ApiResponse[UserResponse]:
+async def get_current_user() -> ApiResponse[UserResponse]:
     """Get the currently authenticated user."""
     return ApiResponse(
         status_code=200,
         message=t("auth.current_user_retrieved"),
-        data=current_user,
+        data=None,
     )

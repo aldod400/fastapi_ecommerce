@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
+
 from app.core.config import settings
-from app.core.security import create_access_token, hash_password
+from app.core.security import create_access_token, hash_password, verify_password
 from app.modules.authentication.schemas.register import RegisterRequest
 from app.modules.users.model import User
 from app.modules.users.repository import UserRepository
@@ -49,9 +50,23 @@ class AuthenticationService:
 
         await self.db.refresh(user)
 
-        return self._authenticate(user)
+        return await self._authenticate(user)
 
-    def _authenticate(self, user: User) -> AuthenticatedUser:
+    async def login(self, email: str, password: str) -> AuthenticatedUser:
+        user = await self.user_repo.get_user_by_email(email)
+
+        if not user or not verify_password(password, user.password):
+            raise ValidationError(t("auth.invalid_credentials"))
+
+        if not user.is_active:
+            raise ValidationError(t("messages.inactive_user"))
+
+        return await self._authenticate(user)
+
+    async def get_authenticated_user(self) -> User:
+        return await self.user_repo.get_user_by_username(username)
+
+    async def _authenticate(self, user: User) -> AuthenticatedUser:
         return AuthenticatedUser(
             user=user,
             access_token=create_access_token(user.id),
